@@ -431,3 +431,78 @@ def get_frame_from_timeseries(input_img: ants.ANTsImage, frame: int) -> ants.ANT
     ants.set_direction( img_3d, subdirection )
 
     return img_3d
+
+def decay_factor_from_nifti(image_path: str) -> np.ndarray:
+    """Get the decay factors from the BIDS metadata"""
+    pet_meta = image_io.load_metadata_for_nifti_with_same_filename(image_path=image_path)
+    if 'DecayCorrectionFactor' in pet_meta.keys():
+        decay_correction = pet_meta['DecayCorrectionFactor']
+    elif 'DecayFactor' in pet_meta.keys():
+        decay_correction = pet_meta['DecayFactor']
+    else:
+        raise ValueError("Neither 'DecayCorrectionFactor' nor 'DecayFactor' exist in meta-data "
+                         "file")
+    return np.array(decay_correction)
+
+class Wss:
+    """Class for calculating the weighted series sum of a PET image over a range of frames."""
+    def __init__(self,
+                 input_image_path: str):
+        self.input_img = ants.image_read(input_image_path)
+        self.half_life = image_io.get_half_life_from_nifti(image_path=input_image_path)
+        self.scan_timing = scan_timing.ScanTimingInfo.from_nifti(image_path=input_image_path)
+        self.decay_correction = decay_factor_from_nifti(image_path=input_image_path)
+
+    def weighted_sum(self,start_frame: int,end_frame: int) -> ants.ANTsImage:
+        """
+        Weighted sum of a PET image based on time and re-corrected for decay correction.
+        """
+        frame_duration = self.apply_frame_range_to_array(self.scan_timing.duration,start_frame,end_frame)
+        frame_starts = self.apply_frame_range_to_array(self.scan_timing.start,start_frame,end_frame)
+        decay_correction = self.apply_frame_range_to_array(self.decay_correction,start_frame,end_frame)
+        input_img = self.apply_frame_range_to_image(self.input_img,start_frame,end_frame)
+
+        total_duration = self.total_duration_over_frame_range(frame_duration=frame_duration)
+        total_decay = self.total_decay(range_total_duration=total_duration,frame_starts=frame_starts)
+        
+        input_img_scaled = input_img * frame_duration / decay_correction
+        input_img_sum_scaled = input_img_scaled.sum(axis=3)
+        weighted_sum_arr = input_img_sum_scaled * total_decay / total_duration
+        weighted_sum_img = ants.from_numpy_like(weighted_sum_arr,gen_3d_img_from_timeseries(input_img))
+        return weighted_sum_img
+
+    def total_duration_over_frame_range(self,frame_duration: np.ndarray):
+        """Calculate total duration of frame range"""
+        return np.sum(frame_duration)
+
+    def total_decay(self,range_total_duration: float,frame_starts: np.ndarray):
+        "Calculate total decay over time range"
+        decay_constant = np.log(2.0) / self.half_life
+        decay_into_duration = decay_constant * range_total_duration
+        decay_over_range = 1.0 - np.exp(-1.0 * decay_constant * range_total_duration)
+        decay_at_start = np.exp(-1 * decay_constant * frame_starts[0])
+        total_decay = decay_into_duration / (decay_over_range * decay_at_start)
+        return total_decay
+
+    def apply_frame_range_to_image(self,
+                                   input_img: ants.ANTsImage,
+                                   start_frame: int,
+                                   end_frame: int) -> ants.ANTsImage:
+        """Apply frame range to PET image"""
+        return input_img[:,:,:,start_frame:end_frame]
+
+    def apply_frame_range_to_array(self,
+                                   array: np.ndarray,
+                                   start_frame: int,
+                                   end_frame: int) -> np.ndarray:
+        """Apply frame range to array"""
+        return array[start_frame:end_frame]
+
+    def __call__(self, start_frame: int, end_frame: int, out_image_path: str):
+        """Run WSS over a range of frames and save output image to file.
+        
+        start_frame (int): Beginning of the frame range to be summed over
+        end_frame (int): End of the frame range to be summed over
+        out_image_path (str): Path to which resulting summed image is saved"""
+        weighted_sum_img = self.weighted_sum(start_frame=start_frame,end_frame=end_frame)
+        ants.image_write(weighted_sum_img,out_image_path)
