@@ -7,9 +7,9 @@ name = "petpal"
 version = "0.5.4"
 description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
 authors = [
-    {name = "Furqan Dar", email = "dar@wustl.edu"},
-    {name = "Bradley Judge"},
     {name = "Noah Goldman", email = "noahg@wustl.edu"},
+    {name = "Bradley Judge", email = "bjudge@wustl.edu"},
+    {name = "Furqan Dar", email = "dar@wustl.edu"},
     {name = "Kenan Oestreich", email = "kenan.oestreich@wustl.edu"}
 ]
 requires-python = ">= 3.12" # At least Python 3.12
