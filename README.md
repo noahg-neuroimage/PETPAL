@@ -9,7 +9,17 @@
 
 ## Installation
 
-Currently, we only support building the package directly from source. Clone the repository using your preferred method. After navigating to the top-level directory (where `pyproject.toml` exists), we run the following command in the terminal:
+### Using Pip
+
+The simplest way to install PETPAL is using pip. First, ensure you are using Python version >=3.12. Then, run the following:
+
+```shell
+pip install petpal
+```
+
+### Build from source
+
+Clone the repository using your preferred method. After navigating to the top-level directory (where `pyproject.toml` exists), we run the following command in the terminal:
 
 ```shell
 pip install .  # Installs the package

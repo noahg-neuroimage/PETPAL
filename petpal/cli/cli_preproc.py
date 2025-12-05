@@ -345,89 +345,84 @@ def main():
         preproc_parser.print_help()
         raise SystemExit('Exiting without command')
 
-    if len(args.motion_target)==1:
-        motion_target = args.motion_target[0]
+    if 'motion_target' in dir(args):
+        if len(args.motion_target)==1:
+            motion_target = args.motion_target[0]
+        else:
+            motion_target = args.motion_target
     else:
-        motion_target = args.motion_target
+        motion_target = None
 
     command = str(args.command).replace('-','_')
 
-    if command=='weighted_series_sum':
-        useful_functions.weighted_series_sum(input_image_4d_path=args.input_img,
-                                             out_image_path=args.out_img,
-                                             half_life=args.half_life,
-                                             start_time=args.start_time,
-                                             end_time=args.end_time,
-                                             verbose=True)
-
-    if command=='auto_crop':
-        image_operations_4d.SimpleAutoImageCropper(input_image_path=args.input_img,
-                                                   out_image_path=args.out_img,
-                                                   thresh_val=args.thresh_val,
-                                                   verbose=True)
-
-    if command=='motion_correction':
-        motion_corr.motion_corr(input_image_4d_path=args.input_img,
+    match command:
+        case 'weighted_series_sum':
+            useful_functions.weighted_series_sum(input_image_4d_path=args.input_img,
+                                                 out_image_path=args.out_img,
+                                                 half_life=args.half_life,
+                                                 start_time=args.start_time,
+                                                 end_time=args.end_time,
+                                                 verbose=True)
+        case 'auto_crop':
+            image_operations_4d.SimpleAutoImageCropper(input_image_path=args.input_img,
+                                                    out_image_path=args.out_img,
+                                                    thresh_val=args.thresh_val,
+                                                    verbose=True)
+        case 'motion_correction':
+            motion_corr.motion_corr(input_image_4d_path=args.input_img,
+                                    out_image_path=args.out_img,
+                                    motion_target_option=motion_target,
+                                    verbose=True,
+                                    type_of_transform=args.transform_type,
+                                    half_life=args.half_life)
+        case 'register_pet':
+            register.register_pet(input_reg_image_path=args.input_img,
                                 out_image_path=args.out_img,
+                                reference_image_path=args.anatomical,
                                 motion_target_option=motion_target,
                                 verbose=True,
-                                type_of_transform=args.transform_type,
                                 half_life=args.half_life)
-    if command=='register_pet':
-        register.register_pet(input_reg_image_path=args.input_img,
-                              out_image_path=args.out_img,
-                              reference_image_path=args.anatomical,
-                              motion_target_option=motion_target,
-                              verbose=True,
-                              half_life=args.half_life)
-
-    if command=='write_tacs_old':
-        regional_tac_extraction.write_tacs(input_image_path=args.input_img,
-                                           out_tac_dir=args.out_tac_dir,
-                                           segmentation_image_path=args.segmentation,
-                                           label_map_path=args.label_map_path,
-                                           verbose=True)
-
-    if command=='write_tacs':
-        tac_obj = regional_tac_extraction.WriteRegionalTacs(input_image_path=args.input_img,
-                                                  segmentation_path=args.segmentation,
-                                                  label_map=args.label_map)
-        tac_obj(out_tac_prefix=args.patid,
-                out_tac_dir=args.out_tac_dir,
-                one_tsv_per_region=not args.excel)
-
-    if command=='warp_pet_atlas':
-        register.warp_pet_atlas(input_image_path=args.input_img,
-                                anat_image_path=args.anatomical,
-                                atlas_image_path=args.reference_atlas,
-                                out_image_path=args.out_img,
-                                verbose=True)
-
-    if command=='gauss_blur':
-        image_operations_4d.gauss_blur(input_image_path=args.input_img,
-                                       blur_size_mm=args.blur_size_mm,
+        case 'write_tacs_old':
+            regional_tac_extraction.write_tacs(input_image_path=args.input_img,
+                                            out_tac_dir=args.out_tac_dir,
+                                            segmentation_image_path=args.segmentation,
+                                            label_map_path=args.label_map_path,
+                                            verbose=True)
+        case 'write_tacs':
+            tac_obj = regional_tac_extraction.WriteRegionalTacs(input_image_path=args.input_img,
+                                                    segmentation_path=args.segmentation,
+                                                    label_map=args.label_map)
+            tac_obj(out_tac_prefix=args.patid,
+                    out_tac_dir=args.out_tac_dir,
+                    one_tsv_per_region=not args.excel)
+        case 'warp_pet_atlas':
+            register.warp_pet_to_atlas(input_image_path=args.input_img,
+                                       anat_image_path=args.anatomical,
+                                       atlas_image_path=args.reference_atlas,
                                        out_image_path=args.out_img,
-                                       verbose=True,
-                                       use_fwhm=True)
-
-    if command=='suvr':
-        image_operations_4d.suvr(input_image_path=args.input_img,
-                                 out_image_path=args.out_img,
-                                 segmentation_image_path=args.segmentation,
-                                 ref_region=args.ref_region)
-
-    if command=='windowed_motion_corr':
-        motion_corr.windowed_motion_corr_to_target(input_image_path=args.input_img,
-                                                   out_image_path=args.out_img,
-                                                   motion_target_option=motion_target,
-                                                   w_size=args.window_size,
-                                                   type_of_transform=args.transform_type)
-
-    if command=='rescale_image':
-        input_img = ants.image_read(filename=args.input_img)
-        out_img = image_operations_4d.rescale_image(input_image=input_img,
-                                                    rescale_constant=args.scale_factor)
-        ants.image_write(image=out_img, filename=args.out_img)
+                                       verbose=True)
+        case 'gauss_blur':
+            image_operations_4d.gauss_blur(input_image_path=args.input_img,
+                                        blur_size_mm=args.blur_size_mm,
+                                        out_image_path=args.out_img,
+                                        verbose=True,
+                                        use_fwhm=True)
+        case 'suvr':
+            image_operations_4d.suvr(input_image_path=args.input_img,
+                                     out_image_path=args.out_img,
+                                     segmentation_image_path=args.segmentation,
+                                     ref_region=args.ref_region)
+        case 'windowed_motion_corr':
+            motion_corr.windowed_motion_corr_to_target(input_image_path=args.input_img,
+                                                    out_image_path=args.out_img,
+                                                    motion_target_option=motion_target,
+                                                    w_size=args.window_size,
+                                                    type_of_transform=args.transform_type)
+        case 'rescale_image':
+            input_img = ants.image_read(filename=args.input_img)
+            out_img = image_operations_4d.rescale_image(input_image=input_img,
+                                                        rescale_constant=args.scale_factor)
+            ants.image_write(image=out_img, filename=args.out_img)
 
 if __name__ == "__main__":
     main()
