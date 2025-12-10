@@ -1,0 +1,18 @@
+import ants
+img = ants.image_read(ants.get_ants_data("r16")).clone('float')
+tx = ants.new_ants_transform(dimension=2)
+tx.set_parameters((0.9,0,0,1.1,10,11))
+inv_tx = tx.invert()
+single_tx = ants.compose_ants_transforms([tx, inv_tx])
+img_orig = single_tx.apply_to_image(img, img)
+rRotGenerator = ants.contrib.RandomRotate2D( ( 0, 40 ), reference=img )
+rShearGenerator=ants.contrib.RandomShear2D( (0,50), reference=img )
+tx1 = rRotGenerator.transform()
+tx2 = rShearGenerator.transform()
+rSrR = ants.compose_ants_transforms([tx1, tx2])
+transformed_img = rSrR.apply_to_image( img )
+
+ants_reg_result = ants.registration(fixed=img,moving=transformed_img)
+ants_xfm = ants.ants_transform_io.read_transform(ants_reg_result['fwdtransforms'])
+print(rSrR.parameters)
+print(ants_xfm.parameters)
