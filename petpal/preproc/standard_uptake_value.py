@@ -83,11 +83,15 @@ def weighted_sum_for_suv(input_image_path: str,
 def suv(input_image_path: str,
         output_image_path: str | None,
         weight: float,
-        dose: float):
+        dose: float,
+        start_time: float,
+        end_time: float):
     """Compute standard uptake value (SUV) over a pet image. Calculate the weighted image sum
     then divide by the dose and multiplying by the weight of the participant."""
     wss_img = weighted_sum_for_suv(input_image_path=input_image_path,
-                                   output_image_path=None)
+                                   output_image_path=None,
+                                   start_time=start_time,
+                                   end_time=end_time)
     suv_img = wss_img / dose * weight
 
     if output_image_path is not None:

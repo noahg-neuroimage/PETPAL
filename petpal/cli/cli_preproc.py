@@ -124,6 +124,8 @@ Examples:
     petpal-preproc rescale-image -i /path/to/input_img.nii.gz -o petpal_rescale.nii.gz --scale-factor 1000
   - Warp to atlas:
     petpal-preproc warp-pet-atlas -i /path/to/input_img.nii.gz -o petpal_reg-atlas.nii.gz --anatomical /path/to/anat.nii.gz --reference-atlas /path/to/atlas.nii.gz
+  - SUV:
+    petpal-preproc suv -i /path/to/input_img.nii.gz -o petpal_suv.nii.gz --weight 75 --dose 250 --start-time 1200 --end-time 3600
 """
 
 
@@ -342,7 +344,14 @@ def _generate_args() -> argparse.ArgumentParser:
                             required=True,
                             help='Dose of radiotracer injected in MBQ/mL',
                             type=float)
-
+    parser_suv.add_argument('--start-time',
+                            required=True,
+                            help='Start time for SUV calculation in seconds from scan start',
+                            type=float)
+    parser_suv.add_argument('--end-time',
+                            required=True,
+                            help='End time for SUV calculation in seconds from scan start',
+                            type=float)
     return parser
 
 
@@ -436,6 +445,8 @@ def main():
         case 'suv':
             standard_uptake_value.suv(input_image_path=args.input_img,
                                       output_image_path=args.out_img,
+                                      start_time=args.start_time,
+                                      end_time=args.end_time,
                                       weight=args.weight,
                                       dose=args.dose)
 
