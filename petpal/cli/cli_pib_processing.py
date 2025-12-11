@@ -94,7 +94,7 @@ def main():
 
     # Configure steps for kinetic modeling container
     suvr_step = ImageToImageStep(name='suvr',
-                                 function=petpal.preproc.image_operations_4d.suvr,
+                                 function=petpal.preproc.standard_uptake_value.suvr,
                                  input_image_path='',
                                  output_image_path='',
                                  ref_region=ref_region_label,

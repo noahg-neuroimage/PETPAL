@@ -94,6 +94,8 @@ See Also:
 import argparse
 import ants
 
+import petpal.preproc.standard_uptake_value
+
 
 from ..utils import useful_functions
 from ..preproc import image_operations_4d, motion_corr, register, regional_tac_extraction
@@ -411,7 +413,7 @@ def main():
                                        use_fwhm=True)
 
     if command=='suvr':
-        image_operations_4d.suvr(input_image_path=args.input_img,
+        petpal.preproc.standard_uptake_value.suvr(input_image_path=args.input_img,
                                  out_image_path=args.out_img,
                                  segmentation_image_path=args.segmentation,
                                  ref_region=args.ref_region)
