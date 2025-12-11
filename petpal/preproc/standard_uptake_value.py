@@ -35,7 +35,6 @@ def suvr(input_image_path: str,
     suv_arr = suv_img.numpy()
     segmentation_img = ants.image_read(filename=segmentation_image_path,
                                         pixeltype='unsigned int')
-    segmentation_arr = segmentation_img.numpy()
 
     if len(suv_arr.shape)!=3:
         raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
