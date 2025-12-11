@@ -94,11 +94,14 @@ See Also:
 import argparse
 import ants
 
-import petpal.preproc.standard_uptake_value
 
 
 from ..utils import useful_functions
-from ..preproc import image_operations_4d, motion_corr, register, regional_tac_extraction
+from ..preproc import (image_operations_4d,
+                       motion_corr,
+                       register,
+                       regional_tac_extraction,
+                       standard_uptake_value)
 
 
 _PREPROC_EXAMPLES_ = r"""
@@ -438,6 +441,11 @@ def main():
             out_img = image_operations_4d.rescale_image(input_image=input_img,
                                                         rescale_constant=args.scale_factor)
             ants.image_write(image=out_img, filename=args.out_img)
+        case 'suv':
+            standard_uptake_value.suv(input_image_path=args.input_img,
+                                      output_image_path=args.out_img,
+                                      weight=args.weight,
+                                      dose=args.dose)
 
 if __name__ == "__main__":
     main()
