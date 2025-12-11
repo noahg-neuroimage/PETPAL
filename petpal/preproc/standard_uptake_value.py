@@ -5,10 +5,11 @@ uptake value ratio (SUVR).
 from ..utils.stats import mean_value_in_region
 from ..utils.math_lib import weighted_sum_computation
 from ..utils.useful_functions import gen_3d_img_from_timeseries, nearest_frame_to_timepoint
-from ..utils.image_io import get_half_life_from_nifti, load_metadata_for_nifti_with_same_filename
+from ..utils.image_io import (get_half_life_from_nifti,
+                              load_metadata_for_nifti_with_same_filename,
+                              safe_copy_meta)
 from .image_operations_4d import weighted_series_sum
 import numpy as np
-from petpal.utils import image_io
 
 
 import ants
@@ -73,8 +74,8 @@ def weighted_sum_for_suv(input_image_path: str,
 
     if output_image_path is not None:
         ants.image_write(weighted_sum_img, output_image_path)
-        image_io.safe_copy_meta(input_image_path=input_image_path,
-                                output_image_path=output_image_path)
+        safe_copy_meta(input_image_path=input_image_path,
+                       output_image_path=output_image_path)
 
     return weighted_sum_img
 
@@ -88,6 +89,12 @@ def suv(input_image_path: str,
     wss_img = weighted_sum_for_suv(input_image_path=input_image_path,
                                    output_image_path=None)
     suv_img = wss_img / dose * weight
+
+    if output_image_path is not None:
+        ants.image_write(suv_img, output_image_path)
+        safe_copy_meta(input_image_path=input_image_path,
+                       output_image_path=output_image_path)
+
     return suv_img
 
 
