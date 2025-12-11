@@ -1,6 +1,7 @@
 """
 Module to handle abstracted functionalities
 """
+from collections.abc import Callable
 import os
 import nibabel
 import numpy as np
@@ -431,3 +432,14 @@ def get_frame_from_timeseries(input_img: ants.ANTsImage, frame: int) -> ants.ANT
     ants.set_direction( img_3d, subdirection )
 
     return img_3d
+
+
+def nearest_frame_to_timepoint(frame_times: np.ndarray) -> Callable:
+    """Returns a step function that gets the index of the frame closest to a provided timepoint
+    based on an array of frame times, such as the frame starts or reference times."""
+    nearest_frame_func = interp1d(x=frame_times,
+                                  y=range(len(frame_times)),
+                                  kind='nearest',
+                                  bounds_error=False,
+                                  fill_value='extrapolate')
+    return nearest_frame_func
