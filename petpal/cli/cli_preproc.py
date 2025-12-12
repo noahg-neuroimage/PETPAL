@@ -283,6 +283,14 @@ def _generate_args() -> argparse.ArgumentParser:
                              help='Reference region to normalize SUVR to.',
                              required=True,
                              type=int)
+    parser_suvr.add_argument('--start-time',
+                            required=True,
+                            help='Start time for SUVR calculation in seconds from scan start',
+                            type=float)
+    parser_suvr.add_argument('--end-time',
+                            required=True,
+                            help='End time for SUVR calculation in seconds from scan start',
+                            type=float)
 
     parser_blur = subparsers.add_parser('gauss-blur',help='Perform 3D gaussian blurring.')
     _add_common_args(parser_blur)
@@ -430,7 +438,9 @@ def main():
             standard_uptake_value.suvr(input_image_path=args.input_img,
                                        output_image_path=args.out_img,
                                        segmentation_image_path=args.segmentation,
-                                       ref_region=args.ref_region)
+                                       ref_region=args.ref_region,
+                                       start_time=args.start_time,
+                                       end_time=args.end_time)
         case 'windowed_motion_corr':
             motion_corr.windowed_motion_corr_to_target(input_image_path=args.input_img,
                                                     out_image_path=args.out_img,
