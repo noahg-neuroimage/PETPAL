@@ -428,9 +428,9 @@ def main():
                                         use_fwhm=True)
         case 'suvr':
             standard_uptake_value.suvr(input_image_path=args.input_img,
-                                     out_image_path=args.out_img,
-                                     segmentation_image_path=args.segmentation,
-                                     ref_region=args.ref_region)
+                                       output_image_path=args.out_img,
+                                       segmentation_image_path=args.segmentation,
+                                       ref_region=args.ref_region)
         case 'windowed_motion_corr':
             motion_corr.windowed_motion_corr_to_target(input_image_path=args.input_img,
                                                     out_image_path=args.out_img,
