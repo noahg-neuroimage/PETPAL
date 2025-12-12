@@ -280,9 +280,11 @@ def _generate_args() -> argparse.ArgumentParser:
                             help='Path to segmentation image in anatomical space.')
     parser_suvr.add_argument('-r',
                              '--ref-region',
-                             help='Reference region to normalize SUVR to.',
+                             help='Reference region to normalize SUVR to. List multiple regions to '
+                                  'combine as one reference.',
                              required=True,
-                             type=int)
+                             type=int,
+                             nargs='+')
     parser_suvr.add_argument('--start-time',
                             required=True,
                             help='Start time for SUVR calculation in seconds from scan start',
