@@ -1,4 +1,3 @@
-
 """Module with function to get a motion target for motion correction and registration"""
 import os
 import tempfile
@@ -37,13 +36,15 @@ def determine_motion_target(motion_target_option: str | tuple | list,
         input_image_path (str): Path to the PET image. This is intended to
             be supplied by the parent method employing this function. Default
             value None.
+
     Returns:
         out_image_file (str): File to use as a target to compute
             transformations on.
 
     Raises:
-        ValueError: If ``motion_target_option`` does not match an acceptable option, or if 
-        ``half_life`` is not specifiedwhen ``motion_target_option`` is not 'mean_image'
+        ValueError: If ``motion_target_option`` is not a string, list, or tuple. If it is a string,
+            but does not match one of the preset options or path to a file, the error will also be
+            raised.
         TypeError: If start and end time are incompatible with ``float`` type.
     """
     if isinstance(motion_target_option, str):
