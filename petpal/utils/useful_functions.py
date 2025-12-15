@@ -434,9 +434,17 @@ def get_frame_from_timeseries(input_img: ants.ANTsImage, frame: int) -> ants.ANT
     return img_3d
 
 
-def nearest_frame_to_timepoint(frame_times: np.ndarray) -> Callable:
+def nearest_frame_to_timepoint(frame_times: np.ndarray) -> Callable[[float],float]:
     """Returns a step function that gets the index of the frame closest to a provided timepoint
-    based on an array of frame times, such as the frame starts or reference times."""
+    based on an array of frame times, such as the frame starts or reference times.
+
+    Args:
+        frame_times (np.ndarray): The frame times on which to generate the step function.
+
+    Returns:
+        nearest_frame_func (Callable[[float],float]): A function that returns the time closest to
+            the provided timepoint.
+    """
     nearest_frame_func = interp1d(x=frame_times,
                                   y=range(len(frame_times)),
                                   kind='nearest',
@@ -445,9 +453,15 @@ def nearest_frame_to_timepoint(frame_times: np.ndarray) -> Callable:
     return nearest_frame_func
 
 
-def get_average_of_timeseries(input_image: ants.ANTsImage):
+def get_average_of_timeseries(input_image: ants.ANTsImage) -> ants.ANTsImage:
     """
     Get average of a 4D ANTsImage and return as a 3D ANTsImage.
+
+    Args:
+        input_image (ants.ANTsImage): 4D PET image over which to compute timeseries average.
+
+    Returns:
+        mean_image (ants.ANTsImage): 3D mean over time in the PET image.
     """
     assert len(input_image.shape) == 4, "Input image must be 4D"
     mean_array = input_image.mean(axis=-1)
@@ -458,7 +472,7 @@ def get_average_of_timeseries(input_image: ants.ANTsImage):
     return mean_image
 
 
-def gen_nd_image_based_on_image_list(image_list: list[ants.core.ants_image.ANTsImage]):
+def gen_nd_image_based_on_image_list(image_list: list[ants.ANTsImage]) -> ants.ANTsImage:
     r"""
     Generate a 4D ANTsImage based on a list of 3D ANTsImages.
 
@@ -474,7 +488,7 @@ def gen_nd_image_based_on_image_list(image_list: list[ants.core.ants_image.ANTsI
             dimensions and properties.
 
     Returns:
-        ants.core.ants_image.ANTsImage:
+        ants.ANTsImage:
             A 4D ANTsImage constructed from the input list of 3D images. The additional
             dimension corresponds to the number of frames (length of the image list).
 
