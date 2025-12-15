@@ -9,13 +9,14 @@ from ..preproc.segmentation_tools import combine_regions_as_mask
 
 def mean_value_in_region(input_img: ants.ANTsImage,
                          seg_img: ants.ANTsImage,
-                         mapping: int | list[int]):
+                         mappings: int | list[int]):
     """Calculate the mean value in a 3D PET image over a region based on one or more integer
     mappings corresponding to regions in a segmentation image."""
-    region_mask = combine_regions_as_mask(segmentation_img=seg_img,
-                                          label=mapping)
-    pet_masked_arr = input_img[seg_img.nonzero()]
-    return pet_masked_arr.mean()
+    region_mask = ants.mask_image(input_img, seg_img, level=mappings)
+    region_arr = region_mask.numpy().flatten()
+    region_arr_nonzero = region_arr.nonzero()
+    voxel_arr = region_arr[region_arr_nonzero]
+    return voxel_arr.mean()
 
 
 class RegionalStats:

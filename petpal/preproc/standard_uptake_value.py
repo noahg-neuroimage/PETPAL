@@ -100,7 +100,7 @@ def suv(input_image_path: str,
                                    output_image_path=None,
                                    start_time=start_time,
                                    end_time=end_time)
-    suv_img = wss_img / (dose*1000) * weight 
+    suv_img = wss_img / (dose*1000) * weight
 
     if output_image_path is not None:
         ants.image_write(suv_img, output_image_path)
@@ -142,12 +142,11 @@ def suvr(input_image_path: str,
                                    output_image_path=None,
                                    start_time=start_time,
                                    end_time=end_time)
-    segmentation_img = ants.image_read(filename=segmentation_image_path,
-                                        pixeltype='unsigned int')
+    segmentation_img = ants.image_read(filename=segmentation_image_path)
 
     ref_region_avg = mean_value_in_region(input_img=sum_img,
                                           seg_img=segmentation_img,
-                                          mapping=ref_region)
+                                          mappings=ref_region)
 
     suvr_img = sum_img / ref_region_avg
 
