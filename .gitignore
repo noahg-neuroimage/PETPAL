@@ -237,3 +237,6 @@ fabric.properties
 
 # notebooks for testing new things
 debug_notebooks
+
+# vscode
+.vscode
