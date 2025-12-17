@@ -130,7 +130,7 @@ def decay_correct(input_image_path: str,
 
 
 def calculate_frame_decay_factor(frame_reference_time: np.ndarray,
-                                 half_life: np.ndarray) -> np.ndarray:
+                                 half_life: float) -> np.ndarray:
     """Calculate decay correection factors for a scan given the frame reference time and half life.
     
     Important: 
@@ -139,7 +139,7 @@ def calculate_frame_decay_factor(frame_reference_time: np.ndarray,
         
     Args: 
         frame_reference_time (np.ndarray): Time at which the average activity occurs for the frame.
-        half_life (np.ndarray): Radionuclide half life.
+        half_life (float): Radionuclide half life.
 
     Returns: 
         np.ndarray: Decay Correction Factors for each frame in the scan.

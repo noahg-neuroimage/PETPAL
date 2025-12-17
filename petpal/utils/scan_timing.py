@@ -264,7 +264,7 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
 
 def calculate_frame_reference_time(frame_duration: np.ndarray,
                                    frame_start: np.ndarray,
-                                   half_life: np.ndarray) -> np.ndarray:
+                                   half_life: float) -> np.ndarray:
     r"""Compute frame reference time as the time at which the average activity occurs.
     
     Equation comes from the `DICOM standard documentation
@@ -278,7 +278,7 @@ def calculate_frame_reference_time(frame_duration: np.ndarray,
     Args:
         frame_duration (np.ndarray): Duration of each frame in seconds.
         frame_start (np.ndarray): Start time of each frame relative to scan start, in seconds.
-        half_life (np.ndarray): Radionuclide half life in seconds.
+        half_life (np.float): Radionuclide half life in seconds.
 
     Returns: 
         np.ndarray: Frame reference time for each frame in the scan in seconds.
