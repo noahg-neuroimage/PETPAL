@@ -278,7 +278,7 @@ def calculate_frame_reference_time(frame_duration: np.ndarray,
     Args:
         frame_duration (np.ndarray): Duration of each frame in seconds.
         frame_start (np.ndarray): Start time of each frame relative to scan start, in seconds.
-        half_life (np.float): Radionuclide half life in seconds.
+        half_life (float): Radionuclide half life in seconds.
 
     Returns: 
         np.ndarray: Frame reference time for each frame in the scan in seconds.
