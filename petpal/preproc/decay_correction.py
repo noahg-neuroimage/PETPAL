@@ -131,12 +131,13 @@ def decay_correct(input_image_path: str,
 
 def calculate_frame_decay_factor(frame_reference_time: np.ndarray,
                                  half_life: float) -> np.ndarray:
-    """Calculate decay correection factors for a scan given the frame reference time and half life.
+    """Calculate decay correction factors for a scan given the frame reference time and half life.
     
     Important: 
         The frame reference time should be the time at which average activity occurs,
-        not simply the midpoint. See preproc.scan_timing.calculate_frame_reference_time for more info.
-        
+        not simply the midpoint. See
+        :meth:`~petpal.utils.scan_timing.calculate_frame_reference_time` for more info.
+
     Args: 
         frame_reference_time (np.ndarray): Time at which the average activity occurs for the frame.
         half_life (float): Radionuclide half life.
