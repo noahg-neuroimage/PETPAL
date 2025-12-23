@@ -154,13 +154,13 @@ class ScanTimingInfo:
         """
         frm_dur = np.asarray(metadata_dict['FrameDuration'], float)
         try:
-            frm_ends = np.asarray(metadata_dict['FrameTimesEnd'], float)
-        except KeyError:
-            frm_ends = np.cumsum(frm_dur)
-        try:
             frm_starts = np.asarray(metadata_dict['FrameTimesStart'], float)
         except KeyError:
-            frm_starts = np.diff(frm_ends)
+            frm_starts = np.cumsum(frm_dur)-frm_dur
+        try:
+            frm_ends = np.asarray(metadata_dict['FrameTimesEnd'], float)
+        except KeyError:
+            frm_ends = frm_starts+frm_dur
         try:
             decay = np.asarray(metadata_dict['DecayCorrectionFactor'], float)
         except KeyError:
@@ -202,6 +202,11 @@ class ScanTimingInfo:
         """
         _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
         return cls.from_metadata(metadata_dict=_meta_data)
+
+    @classmethod
+    def from_start_end(cls, frame_starts: np.ndarray, frame_ends: np.ndarray):
+        """Infer timing properties based on start and end time."""
+        frame_duration = 
 
 
 def get_window_index_pairs_from_durations(frame_durations: np.ndarray, w_size: float):
