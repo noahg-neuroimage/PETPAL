@@ -2,7 +2,24 @@ import numpy as np
 import pytest
 from petpal.utils.scan_timing import calculate_frame_reference_time
 from petpal.preproc.decay_correction import calculate_frame_decay_factor
+from petpal.utils.scan_timing import ScanTimingInfo
 
+def test_from_start_end_computes_duration_center_and_default_decay():
+    starts = np.array([0.0, 60.0, 180.0])
+    ends = np.array([60.0, 180.0, 360.0])
+    info = ScanTimingInfo.from_start_end(frame_starts=starts, frame_ends=ends)
+    np.testing.assert_allclose(info.duration, np.array([60.0, 120.0, 180.0]))
+    np.testing.assert_allclose(info.center, np.array([30.0, 120.0, 270.0]))
+    np.testing.assert_allclose(info.decay, np.ones_like(starts))
+
+def test_from_start_end_uses_provided_decay_list():
+    starts = np.array([0.0, 50.0])
+    ends = np.array([25.0, 100.0])
+    decay_list = [1.0, 0.9]
+    info = ScanTimingInfo.from_start_end(frame_starts=starts, frame_ends=ends, decay_correction_factor=decay_list)
+    np.testing.assert_allclose(info.duration, np.array([25.0, 50.0]))
+    np.testing.assert_allclose(info.center, np.array([12.5, 75.0]))
+    np.testing.assert_allclose(info.decay, np.array(decay_list))
 
 def test_ref_time_no_decay_returns_midpoint():
     durations = np.array([5.0, 10.0])
