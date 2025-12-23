@@ -220,12 +220,27 @@ class ScanTimingInfo:
 
         Returns:
             scan_timing_info (ScanTimingInfo): ScanTimingInfo object with the correct start, end,
-                duration, midpoint, and (optionally) decay correction for each frame."""
+                duration, midpoint, and (optionally) decay correction for each frame.
+
+        Raises:
+            ValueError: If frame_starts, frame_ends, and decay_correction_factor (if provided) are
+                not of identical shape.
+
+        """
+        if frame_starts.shape != frame_ends.shape:
+            raise ValueError("frame_ends must have the same shape as frame_starts")
+
         frame_duration = frame_ends - frame_starts
         frame_midpoint = frame_starts + frame_duration / 2
         frame_decay = np.ones_like(frame_starts)
-        if decay_correction_factor:
-            frame_decay = decay_correction_factor
+
+        if decay_correction_factor is None:
+            frame_decay = np.ones_like(frame_starts, dtype=float)
+        else:
+            frame_decay = np.asarray(decay_correction_factor, dtype=float)
+            if frame_decay.shape != frame_starts.shape:
+                raise ValueError("decay_correction_factor must have the same shape as frame_starts")
+
         return cls(duration=frame_duration,
                    start=frame_starts,
                    end=frame_ends,
