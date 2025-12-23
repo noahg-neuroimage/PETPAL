@@ -206,7 +206,7 @@ class ScanTimingInfo:
     @classmethod
     def from_start_end(cls, frame_starts: np.ndarray, frame_ends: np.ndarray):
         """Infer timing properties based on start and end time."""
-        frame_duration = 
+        frame_duration = False
 
 
 def get_window_index_pairs_from_durations(frame_durations: np.ndarray, w_size: float):
