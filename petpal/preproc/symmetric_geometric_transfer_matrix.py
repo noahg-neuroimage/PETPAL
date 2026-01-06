@@ -93,7 +93,7 @@ class Sgtm:
         elif self.input_image.dimension == 4:
             self.sgtm_result = self.run_sgtm_4d()
 
-    def save(self, output_path: str, out_tac_prefix: str | None = None):
+    def save(self, output_path: str, out_tac_prefix: str | None = None, one_tsv_per_region: bool = False):
         r"""Save sGTM results by writing the resulting array to one or more files.
 
         The behavior depends on the input iamge provided. If input image is 3D, saves the average sGTM value for each
@@ -109,8 +109,14 @@ class Sgtm:
         if self.input_image.dimension == 3:
             self.save_results_3d(sgtm_result=self.sgtm_result, out_tsv_path=output_path)
         elif self.input_image.dimension == 4:
-            self.save_results_4d_tacs(sgtm_result=self.sgtm_result, out_tac_dir=output_path,
-                                      out_tac_prefix=out_tac_prefix)
+            if one_tsv_per_region:
+                self.save_results_4d_tacs(sgtm_result=self.sgtm_result,
+                                          out_tac_dir=output_path,
+                                          out_tac_prefix=out_tac_prefix)
+            else:
+                self.save_results_4d_multitacs(sgtm_result=self.sgtm_result,
+                                               out_tac_dir=output_path,
+                                               out_tac_prefix=out_tac_prefix)
 
     def __call__(self, output_path: str, out_tac_prefix: str | None = None):
         r"""Run sGTM and save results.
