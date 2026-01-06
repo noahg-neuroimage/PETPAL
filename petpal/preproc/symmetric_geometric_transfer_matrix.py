@@ -9,6 +9,7 @@ import warnings
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
+import pandas as pd
 
 from ..meta.label_maps import LabelMapLoader
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
@@ -380,3 +381,24 @@ class Sgtm:
                                         activity=tac_array[i,:])
             out_tac_path = os.path.join(f'{out_tac_dir}', f'{out_tac_prefix}_seg-{name}_tac.tsv')
             pvc_tac.to_tsv(filename=out_tac_path)
+
+    def save_results_4d_multitacs(self,
+                                  sgtm_result: np.ndarray,
+                                  out_tac_dir: str,
+                                  out_tac_prefix: str):
+        """Like :meth:`save_results_4d_tacs`, but saves all TACs to a single file."""
+        os.makedirs(out_tac_dir, exist_ok=True)
+        input_image_path = self.input_image_path
+        scan_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
+        tac_time_starts = scan_timing.start_in_mins
+        tac_time_ends = scan_timing.end_in_mins
+
+        tac_array = np.asarray(sgtm_result).T
+        tacs_data = pd.DataFrame()
+
+        tacs_data['frame_start(min)'] = tac_time_starts
+        tacs_data['frame_end(min)'] = tac_time_ends
+        for i, (_label, name) in enumerate(zip(*self.unique_labels)):
+            tacs_data[name] = tac_array[i,:]
+            tacs_data[f'{name}_unc'] = np.fill(tac_array[i,:],np.nan)
+        tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_multitacs.tsv', sep='\t', index=False)
