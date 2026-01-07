@@ -408,5 +408,5 @@ class Sgtm:
         tacs_data['frame_end(min)'] = tac_time_ends
         for i, (_label, name) in enumerate(zip(*self.unique_labels)):
             tacs_data[name] = tac_array[i,:]
-            tacs_data[f'{name}_unc'] = np.fill(tac_array[i,:],np.nan)
+            tacs_data[f'{name}_unc'] = np.empty_like(tac_array[i,:]).fill(np.nan)
         tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_multitacs.tsv', sep='\t', index=False)
