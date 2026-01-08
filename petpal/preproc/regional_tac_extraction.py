@@ -346,21 +346,13 @@ class WriteRegionalTacs:
             region_name = f'UNK{label:>04}'
         return region_name
 
-    def check_n_empty_pet_voxels(self,pet_masked_voxels) -> bool:
-        """Check what fraction of PET voxels in a masked region are significantly lower than the
-        max voxel. Warn user if fraction is over 5%.
+    def is_empty_region(self,region_mask: np.ndarray) -> bool:
+        """Check if masked region has zero matched voxels. If so, return True, otherwise return
+        False.
         
         Args:
-            pet_masked_voxels (np.ndarray): Array of PET voxels masked to a specific region."""
-        if len(pet_masked_voxels)==0:
-            warn('Empty region')
-            return True
-
-        pet_max_voxel = pet_masked_voxels.max()
-        pet_min_thresh = pet_max_voxel * 1e-20
-        pet_voxels_below_thresh = pet_masked_voxels[pet_masked_voxels<pet_min_thresh]
-        if len(pet_voxels_below_thresh)/len(pet_masked_voxels)>0.05:
-            warn('Significant inhomogeneity')
+            region_mask (np.ndarray): Array of PET voxels masked to a specific region."""
+        if len(region_mask)==0:
             return True
         return False
 
@@ -377,10 +369,11 @@ class WriteRegionalTacs:
         """
         region_mask = combine_regions_as_mask(segmentation_img=self.seg_arr,
                                               label=region_mapping)
+        is_region_empty = self.is_empty_region(region_mask=region_mask)
+
         pet_masked_region = apply_mask_4d(input_arr=self.pet_arr,
                                           mask_arr=region_mask)
-        is_region_invalid = self.check_n_empty_pet_voxels(pet_masked_voxels=pet_masked_region)
-        if is_region_invalid:
+        if is_region_empty:
             extracted_tac = np.empty_like(self.scan_timing.center_in_mins)
             extracted_tac.fill(np.nan)
             uncertainty = extracted_tac
