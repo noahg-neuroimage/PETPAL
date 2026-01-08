@@ -346,6 +346,19 @@ class WriteRegionalTacs:
             region_name = f'UNK{label:>04}'
         return region_name
 
+    def check_n_empty_pet_voxels(self,pet_masked_voxels):
+        """Check what fraction of PET voxels in a masked region are significantly lower than the
+        max voxel. Warn user if fraction is over 5%.
+        
+        Args:
+            pet_masked_voxels (np.ndarray): Array of PET voxels masked to a specific region."""
+        
+        pet_max_voxel = pet_masked_voxels.max()
+        pet_min_thresh = pet_max_voxel * 1e-10
+        pet_voxels_below_thresh = pet_masked_voxels[pet_masked_voxels<pet_min_thresh]
+        if len(pet_voxels_below_thresh)/len(pet_masked_voxels)>0.05:
+            warn('Significant inhomogeneity')
+
     def extract_tac(self,region_mapping: int | list[int], **tac_calc_kwargs) -> TimeActivityCurve:
         """
         Run self.tac_extraction_func on one region and return the TAC.
