@@ -346,18 +346,23 @@ class WriteRegionalTacs:
             region_name = f'UNK{label:>04}'
         return region_name
 
-    def check_n_empty_pet_voxels(self,pet_masked_voxels):
+    def check_n_empty_pet_voxels(self,pet_masked_voxels) -> bool:
         """Check what fraction of PET voxels in a masked region are significantly lower than the
         max voxel. Warn user if fraction is over 5%.
         
         Args:
             pet_masked_voxels (np.ndarray): Array of PET voxels masked to a specific region."""
-        
+        if len(pet_masked_voxels)==0:
+            warn('Empty region')
+            return True
+
         pet_max_voxel = pet_masked_voxels.max()
-        pet_min_thresh = pet_max_voxel * 1e-10
+        pet_min_thresh = pet_max_voxel * 1e-20
         pet_voxels_below_thresh = pet_masked_voxels[pet_masked_voxels<pet_min_thresh]
         if len(pet_voxels_below_thresh)/len(pet_masked_voxels)>0.05:
             warn('Significant inhomogeneity')
+            return True
+        return False
 
     def extract_tac(self,region_mapping: int | list[int], **tac_calc_kwargs) -> TimeActivityCurve:
         """
@@ -374,9 +379,14 @@ class WriteRegionalTacs:
                                               label=region_mapping)
         pet_masked_region = apply_mask_4d(input_arr=self.pet_arr,
                                           mask_arr=region_mask)
-        self.check_n_empty_pet_voxels(pet_masked_voxels=pet_masked_region)
-        extracted_tac, uncertainty = self.tac_extraction_func(pet_voxels=pet_masked_region,
-                                                              **tac_calc_kwargs)
+        is_region_invalid = self.check_n_empty_pet_voxels(pet_masked_voxels=pet_masked_region)
+        if is_region_invalid:
+            extracted_tac = np.empty_like(self.scan_timing.center_in_mins)
+            extracted_tac.fill(np.nan)
+            uncertainty = extracted_tac
+        else:
+            extracted_tac, uncertainty = self.tac_extraction_func(pet_voxels=pet_masked_region,
+                                                                  **tac_calc_kwargs)
         region_tac = TimeActivityCurve(times=self.scan_timing.center_in_mins,
                                        activity=extracted_tac,
                                        uncertainty=uncertainty)
