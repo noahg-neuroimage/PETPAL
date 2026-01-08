@@ -408,7 +408,7 @@ class WriteRegionalTacs:
                 image. If False, write one TSV file with all TACs in the image.
             **tac_calc_kwargs: Additional keywords passed onto tac_extraction_func.
         """
-        tacs_data = self.tacs_data_frame()
+        tacs_data = self.gen_tacs_data_frame()
 
         for i,region_name in enumerate(self.region_names):
             mappings = self.region_maps[i]
