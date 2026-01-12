@@ -413,6 +413,8 @@ class WriteRegionalTacs:
 
         return tacs_data
 
+
+
     def write_tacs(self,
                    out_tac_prefix: str,
                    out_tac_dir: str | pathlib.Path,
@@ -438,18 +440,24 @@ class WriteRegionalTacs:
         """
         tacs_data = self.gen_tacs_data_frame()
 
+        empty_regions = []
         for i,region_name in enumerate(self.region_names):
             mappings = self.region_maps[i]
             tac = self.extract_tac(region_mapping=mappings, **tac_calc_kwargs)
             if tac.contains_any_nan:
-                warn(f"Region {region_name} did not find matching voxels, excluding from results.")
-                tacs_data.drop([region_name,f'{region_name}_unc'],axis=1,inplace=True)
+                empty_regions.append(region_name)
                 continue
             if one_tsv_per_region:
                 tac.to_tsv(filename=f'{out_tac_dir}/{out_tac_prefix}_seg-{region_name}_tac.tsv')
             else:
                 tacs_data[region_name] = tac.activity
                 tacs_data[f'{region_name}_unc'] = tac.uncertainty
+
+        if len(empty_regions>0):
+            warn("Empty regions were found during tac extraction. TACs for the following regions"
+                 f"were not saved: {empty_regions}")
+            tacs_data.drop([region for region in empty_regions],axis=1,inplace=True)
+            tacs_data.drop([f'{region}_unc' for region in empty_regions],axis=1,inplace=True)
 
         if not one_tsv_per_region:
             tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_multitacs.tsv', sep='\t', index=False)
