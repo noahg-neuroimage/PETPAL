@@ -380,7 +380,7 @@ class WriteRegionalTacs:
         if is_region_empty:
             extracted_tac = np.empty_like(self.scan_timing.center_in_mins)
             extracted_tac.fill(np.nan)
-            uncertainty = extracted_tac
+            uncertainty = extracted_tac.copy()
         else:
             extracted_tac, uncertainty = self.tac_extraction_func(pet_voxels=pet_masked_region,
                                                                   **tac_calc_kwargs)
