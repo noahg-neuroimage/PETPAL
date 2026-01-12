@@ -357,7 +357,7 @@ class WriteRegionalTacs:
             pet_masked_region_is_empty (bool): If True, input region is empty."""
         if pet_masked_region.size==0:
             return True
-        elif np.all(np.isnan(pet_masked_region)):
+        if np.all(np.isnan(pet_masked_region)):
             return True
         return False
 
