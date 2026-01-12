@@ -592,8 +592,8 @@ def seg_crop_to_pet_fov(pet_img: ants.ANTsImage,
     Returns:
         segmentation_masked_img (ants.ANTsImage): Segmentation image masked to PET FOV.
     """
-    assert check_physical_space_for_ants_image_pair(pet_img, segmentation_img), "PET and " \
-        "segmentation image must share physical space."
+    if not check_physical_space_for_ants_image_pair(pet_img, segmentation_img):
+        raise ValueError("PET and segmentation image must share physical space.")
     pet_mean_img = get_average_of_timeseries(input_image=pet_img)
     pet_mask = ants.threshold_image(pet_mean_img, pet_thresh_value)
     seg_masked = ants.mask_image(segmentation_img, pet_mask)
