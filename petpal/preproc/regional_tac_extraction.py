@@ -347,8 +347,8 @@ class WriteRegionalTacs:
         return region_name
 
     def is_empty_region(self,pet_masked_region: np.ndarray) -> bool:
-        """Check if masked PET region has zero matched voxels. If so, return True, otherwise return
-        False.
+        """Check if masked PET region has zero matched voxels, or is all NaNs. In either case,
+        return True, otherwise return False.
         
         Args:
             pet_masked_region (np.ndarray): Array of PET voxels masked to a specific region.
@@ -356,6 +356,8 @@ class WriteRegionalTacs:
         Returns:
             pet_masked_region_is_empty (bool): If True, input region is empty."""
         if pet_masked_region.size==0:
+            return True
+        elif np.all(np.isnan(pet_masked_region)):
             return True
         return False
 
