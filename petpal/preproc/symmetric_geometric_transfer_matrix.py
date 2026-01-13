@@ -9,6 +9,7 @@ import warnings
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
+import pandas as pd
 
 from ..meta.label_maps import LabelMapLoader
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
@@ -92,24 +93,33 @@ class Sgtm:
         elif self.input_image.dimension == 4:
             self.sgtm_result = self.run_sgtm_4d()
 
-    def save(self, output_path: str, out_tac_prefix: str | None = None):
+    def save(self, output_path: str, out_tac_prefix: str | None = None, one_tsv_per_region: bool = False):
         r"""Save sGTM results by writing the resulting array to one or more files.
 
-        The behavior depends on the input iamge provided. If input image is 3D, saves the average sGTM value for each
+        The behavior depends on the input image provided. If input image is 3D, saves the average sGTM value for each
         region in a TSV with one row per region. If input image is 4D, saves time series average values for each frame
-        within each region as a TAC file.
+        within each region. 4D operation saves a single file unless `one_tsv_per_region` is set to True.
 
         Args:
-            output_path (str): Path to save sGTM results. For 3D images, this should typically be a full path to a
-                .tsv file. For 4D images, this is the directory where the sGTM TACs will be saved.
+            output_path (str): Path to save sGTM results. For 3D images, this should typically be
+                the full path to a .tsv file. For 4D images, this is the directory where the sGTM
+                TACs will be saved.
             out_tac_prefix (Optional, str): Prefix of the TAC files. Typically, something like
                 ``'sub-001_ses-001_desc-sGTM'``. Defaults to None.
+            one_tsv_per_region (bool): If True, saves one tsv file for each unique region, as
+                opposed to one file containing all TACs if False. Default False.
         """
         if self.input_image.dimension == 3:
             self.save_results_3d(sgtm_result=self.sgtm_result, out_tsv_path=output_path)
         elif self.input_image.dimension == 4:
-            self.save_results_4d_tacs(sgtm_result=self.sgtm_result, out_tac_dir=output_path,
-                                      out_tac_prefix=out_tac_prefix)
+            if one_tsv_per_region:
+                self.save_results_4d_tacs(sgtm_result=self.sgtm_result,
+                                          out_tac_dir=output_path,
+                                          out_tac_prefix=out_tac_prefix)
+            else:
+                self.save_results_4d_multitacs(sgtm_result=self.sgtm_result,
+                                               out_tac_dir=output_path,
+                                               out_tac_prefix=out_tac_prefix)
 
     def __call__(self, output_path: str, out_tac_prefix: str | None = None):
         r"""Run sGTM and save results.
@@ -162,8 +172,20 @@ class Sgtm:
                           "segmentation to ensure this criteria is met, or use sGTM without "
                           "label map for automated complete region mapping.")
             seg_label_map = LabelMapLoader(label_map_option=self.label_map_option).label_map
-            region_index_map = list(seg_label_map.values())
-            region_short_names = list(seg_label_map.keys())
+            unique_mappings = unique_segmentation_labels(segmentation_img=self.segmentation_image,
+                                                       zeroth_roi=self.zeroth_roi)
+            region_index_map = []
+            region_short_names = []
+            label_map_labels = list(seg_label_map.keys())
+            label_map_mappings = list(seg_label_map.values())
+            for mapping in unique_mappings:
+                if mapping in label_map_mappings:
+                    id_mapping_index = label_map_mappings.index(mapping)
+                    region_index_map.append(label_map_mappings[id_mapping_index])
+                    region_short_names.append(label_map_labels[id_mapping_index])
+                else:
+                    region_index_map.append(mapping)
+                    region_short_names.append(f'UNK{mapping:05d}')
         return (region_index_map, region_short_names)
 
 
@@ -291,7 +313,6 @@ class Sgtm:
 
         return unique_labels, t_corrected, condition_number
 
-
     def run_sgtm_4d(self) -> np.ndarray:
         r"""Calculated partial volume corrected TACs on a 4D image by running sGTM on each frame in
         the 4D image.
@@ -326,7 +347,6 @@ class Sgtm:
 
         return np.asarray(frame_results)
 
-
     def save_results_3d(self, sgtm_result: tuple, out_tsv_path: str):
         r"""Saves the result of an sGTM calculation.
 
@@ -337,12 +357,10 @@ class Sgtm:
             sgtm_result (tuple): Output of :meth:`run_sgtm_3d`
             out_tsv_path (str): File path to which results are saved.
         """
-        sgtm_result_array = np.array([sgtm_result[0], sgtm_result[1]]).T
-        np.savetxt(out_tsv_path,sgtm_result_array,
-                   header='Region\tMean',
-                   fmt=['%.0f','%.2f'],
-                   comments='')
-
+        sgtm_result_to_write = pd.DataFrame(columns=['Region','Mean'])
+        sgtm_result_to_write['Region'] = self.unique_labels[1]
+        sgtm_result_to_write['Mean'] = sgtm_result[1]
+        sgtm_result_to_write.to_csv(out_tsv_path,sep='\t',index=False)
 
     def save_results_4d_tacs(self,
                              sgtm_result: np.ndarray,
@@ -368,3 +386,31 @@ class Sgtm:
                                         activity=tac_array[i,:])
             out_tac_path = os.path.join(f'{out_tac_dir}', f'{out_tac_prefix}_seg-{name}_tac.tsv')
             pvc_tac.to_tsv(filename=out_tac_path)
+
+    def save_results_4d_multitacs(self,
+                                  sgtm_result: np.ndarray,
+                                  out_tac_dir: str,
+                                  out_tac_prefix: str):
+        """Like :meth:`save_results_4d_tacs`, but saves all TACs to a single file.
+
+        Args:
+            sgtm_result (np.ndarray): Array of results from :meth:`run_sgtm_4d`
+            out_tac_dir (str): Path to folder where regional TACs will be saved.
+            out_tac_prefix (str): Prefix of the TAC files.
+        """
+        os.makedirs(out_tac_dir, exist_ok=True)
+        input_image_path = self.input_image_path
+        scan_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
+        tac_time_starts = scan_timing.start_in_mins
+        tac_time_ends = scan_timing.end_in_mins
+
+        tac_array = np.asarray(sgtm_result).T
+        tacs_data_columns = ['frame_start(min)','frame_end(min)']+self.unique_labels[1]
+        tacs_data = pd.DataFrame(columns=tacs_data_columns)
+
+        tacs_data['frame_start(min)'] = tac_time_starts
+        tacs_data['frame_end(min)'] = tac_time_ends
+        for i, (_label, name) in enumerate(zip(*self.unique_labels)):
+            tacs_data[name] = tac_array[i,:]
+            tacs_data[f'{name}_unc'] = np.full(tac_array.shape[1],np.nan)
+        tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_multitacs.tsv', sep='\t', index=False)
