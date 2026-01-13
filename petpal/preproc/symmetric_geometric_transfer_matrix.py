@@ -98,13 +98,16 @@ class Sgtm:
 
         The behavior depends on the input iamge provided. If input image is 3D, saves the average sGTM value for each
         region in a TSV with one row per region. If input image is 4D, saves time series average values for each frame
-        within each region as a TAC file.
+        within each region. 4D operation saves a single file unless `one_tsv_per_region` is set to True.
 
         Args:
-            output_path (str): Path to save sGTM results. For 3D images, this should typically be a full path to a
-                .tsv file. For 4D images, this is the directory where the sGTM TACs will be saved.
+            output_path (str): Path to save sGTM results. For 3D images, this should typically be
+                the full path to a .tsv file. For 4D images, this is the directory where the sGTM
+                TACs will be saved.
             out_tac_prefix (Optional, str): Prefix of the TAC files. Typically, something like
                 ``'sub-001_ses-001_desc-sGTM'``. Defaults to None.
+            one_tsv_per_region (bool): If True, saves one tsv file for each unique region, as
+                opposed to one file containing all TACs if False. Default False.
         """
         if self.input_image.dimension == 3:
             self.save_results_3d(sgtm_result=self.sgtm_result, out_tsv_path=output_path)
