@@ -83,7 +83,12 @@ Examples:
    .. code-block:: bash
 
        petpal-preproc warp-pet-atlas -i /path/to/input_img.nii.gz -o petpal_reg-atlas.nii.gz --anatomical /path/to/anat.nii.gz --reference-atlas /path/to/atlas.nii.gz
- 
+
+    * Crop segmentation to PET FOV:
+
+    .. code-block:: bash
+
+        petpal-preproc seg-crop -i /path/to/input_img.nii.gz -o petpal_cropped_seg.nii.gz --segmentation /path/to/segmentation.nii.gz
 
 See Also:
     * :mod:`~petpal.preproc.image_operations_4d` - module used for operations on 4D images.
@@ -99,7 +104,8 @@ from ..preproc import (image_operations_4d,
                        motion_corr,
                        register,
                        regional_tac_extraction,
-                       standard_uptake_value)
+                       standard_uptake_value,
+                       segmentation_tools)
 
 
 _PREPROC_EXAMPLES_ = r"""
@@ -126,6 +132,8 @@ Examples:
     petpal-preproc warp-pet-atlas -i /path/to/input_img.nii.gz -o petpal_reg-atlas.nii.gz --anatomical /path/to/anat.nii.gz --reference-atlas /path/to/atlas.nii.gz
   - SUV:
     petpal-preproc suv -i /path/to/input_img.nii.gz -o petpal_suv.nii.gz --weight 75 --dose 250 --start-time 1200 --end-time 3600
+  - Crop segmentation image to PET FOV:
+    petpal-preproc seg-crop -i /path/to/input_img.nii.gz -o petpal_cropped_seg.nii.gz --segmentation /path/to/segmentation.nii.gz
 """
 
 
@@ -357,6 +365,15 @@ def _generate_args() -> argparse.ArgumentParser:
                             required=True,
                             help='End time for SUV calculation in seconds from scan start',
                             type=float)
+
+    parser_seg_crop = subparsers.add_parser('seg-crop',help='Crop segmentation image to PET FOV')
+    _add_common_args(parser_seg_crop)
+    parser_seg_crop.add_argument('-s',
+                                 '--segmentation',
+                                 required=True,
+                                 help='Path to segmentation image',
+                                 type=str)
+
     return parser
 
 
@@ -454,6 +471,12 @@ def main():
                                       end_time=args.end_time,
                                       weight=args.weight,
                                       dose=args.dose)
+        case 'seg_crop':
+            input_img = ants.image_read(filename=args.input_img)
+            seg_img = ants.image_read(filename=args.segmentation)
+            seg_cropped = segmentation_tools.seg_crop_to_pet_fov(pet_img=input_img,
+                                                                 segmentation_img=seg_img)
+            ants.image_write(seg_cropped,args.out_img)
 
 if __name__ == "__main__":
     main()
