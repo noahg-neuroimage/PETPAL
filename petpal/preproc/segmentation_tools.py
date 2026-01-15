@@ -84,7 +84,9 @@ def segmentations_merge(segmentation_primary: np.ndarray,
             regions added.
     """
     for region in regions:
-        region_mask = (segmentation_secondary > region - 0.1) & (segmentation_secondary < region + 0.1)
+        condition_above = segmentation_secondary > region - 0.1
+        condition_below = segmentation_secondary < region + 0.1
+        region_mask = condition_above & condition_below
         segmentation_primary[region_mask] = region
     return segmentation_primary
 
@@ -229,8 +231,9 @@ def resample_segmentation(input_image_path: str,
     seg_image = nibabel.load(segmentation_image_path)
     pet_series = pet_image.get_fdata()
     image_first_frame = pet_series[:, :, :, 0]
+    to_vox_map_tuple = (image_first_frame.shape, pet_image.affine)
     seg_resampled = processing.resample_from_to(from_img=seg_image,
-                                                to_vox_map=(image_first_frame.shape, pet_image.affine),
+                                                to_vox_map=to_vox_map_tuple,
                                                 order=0)
     nibabel.save(seg_resampled, out_seg_path)
     if verbose:
@@ -286,7 +289,7 @@ def vat_wm_ref_region(input_segmentation_path: str,
 
     if out_segmentation_path is not None:
         ants.image_write(image=wm_erode, filename=out_segmentation_path)
-    
+
     return wm_erode
 
 
@@ -545,7 +548,8 @@ def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsIm
                                                    morph_dil_radius: int = 0,
                                                    z_crop: int = 3) -> ants.core.ANTsImage:
     """
-    Generates a binary vesselness mask from a given vesselness image using quantile-based thresholding.
+    Generates a binary vesselness mask from a given vesselness image using quantile-based
+    thresholding.
 
     This function creates a binary mask by thresholding a vesselness image at a specified
     quantile of non-zero voxel values. Additionally, it allows for optional z-axis cropping
