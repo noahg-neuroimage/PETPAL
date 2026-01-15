@@ -84,7 +84,9 @@ def segmentations_merge(segmentation_primary: np.ndarray,
             regions added.
     """
     for region in regions:
-        region_mask = (segmentation_secondary > region - 0.1) & (segmentation_secondary < region + 0.1)
+        condition_above = segmentation_secondary > region - 0.1
+        condition_below = segmentation_secondary < region + 0.1
+        region_mask = condition_above & condition_below
         segmentation_primary[region_mask] = region
     return segmentation_primary
 
@@ -229,8 +231,9 @@ def resample_segmentation(input_image_path: str,
     seg_image = nibabel.load(segmentation_image_path)
     pet_series = pet_image.get_fdata()
     image_first_frame = pet_series[:, :, :, 0]
+    to_vox_map_tuple = (image_first_frame.shape, pet_image.affine)
     seg_resampled = processing.resample_from_to(from_img=seg_image,
-                                                to_vox_map=(image_first_frame.shape, pet_image.affine),
+                                                to_vox_map=to_vox_map_tuple,
                                                 order=0)
     nibabel.save(seg_resampled, out_seg_path)
     if verbose:
@@ -238,23 +241,30 @@ def resample_segmentation(input_image_path: str,
 
 
 def vat_wm_ref_region(input_segmentation_path: str,
-                      out_segmentation_path: str):
+                      out_segmentation_path: str | None) -> ants.ANTsImage:
     """
     Generates the cortical white matter reference region described in O'Donnell
-    JL et al. (2024) PET Quantification of [18F]VAT in Human Brain and Its 
+    JL et al. (2024).
+     
+    Reference: O'Donnell JL et al. (2024). PET Quantification of [18F]VAT in Human Brain and Its 
     Test-Retest Reproducibility and Age Dependence. J Nucl Med. 2024 Jun 
     3;65(6):956-961. doi: 10.2967/jnumed.123.266860. PMID: 38604762; PMCID:
-    PMC11149597. Requires FreeSurfer segmentation with original label mappings.
+    PMC11149597.
+    
+    Requires FreeSurfer segmentation with original label mappings. 
 
     Args:
         input_segmentation_path (str): Path to segmentation on which white
             matter reference region is computed.
         out_segmentation_path (str): Path to which white matter reference
             region mask image is saved.
+
+    Returns:
+        wm_erode (ants.ANTsImage): Eroded white matter reference region mask image.
     """
     wm_regions = [2,41,251,252,253,254,255,77,3000,3001,3002,3003,3004,3005,
                   3006,3007,3008,3009,3010,3011,3012,3013,3014,3015,3016,3017,
-                  3018,3019,3020,3021,3022,3023,3024,3025,3026,3027,3018,3029,
+                  3018,3019,3020,3021,3022,3023,3024,3025,3026,3027,3028,3029,
                   3030,3031,3032,3033,3034,3035,4000,4001,4002,4003,4004,4005,
                   4006,4007,4008,4009,4010,4011,4012,4013,4014,4015,4016,4017,
                   4018,4019,4020,4021,4022,4023,4024,4025,4026,4027,4028,4029,
@@ -277,7 +287,45 @@ def vat_wm_ref_region(input_segmentation_path: str,
     wm_csf_eroded = ants.threshold_image(image=wm_csf_blurred, low_thresh=0.95, binary=True)
     wm_erode = ants.mask_image(image=wm_merged, mask=wm_csf_eroded)
 
-    ants.image_write(image=wm_erode, filename=out_segmentation_path)
+    if out_segmentation_path is not None:
+        ants.image_write(image=wm_erode, filename=out_segmentation_path)
+
+    return wm_erode
+
+
+def eroded_wm_segmentation(input_segmentation_path: str,
+                           out_segmentation_path: str | None,
+                           eroded_wm_region_mapping: int = 1) -> ants.ANTsImage:
+    """
+    Generates eroded white matter region on a segmentation image and merges it into the image,
+    saving result as a new segmentation image.
+
+    Requires FreeSurfer segmentation with original label mappings.
+    
+    Args:
+        input_segmentation_path (str): Path to input freesurfer segmentation, such as aparc+aseg or
+            wmparc.
+        out_segmentation_path (str): Path to output segmentation image with replaced values in
+            eroded whited matter region.
+        eroded_wm_region_mapping (int): Segmentation mapping for the eroded white matter region in
+            the output image. Default "1".
+
+    Returns:
+        seg_img (ants.ANTsImage): Input segmentation image with values in eroded white matter
+            replaced with `eroded_wm_region_mapping`.
+
+    See also:
+        :meth:`~petpal.preproc.segmentation_tools.vat_wm_ref_region` - function that generates the
+            eroded white matter region.
+    """
+    wm_erode = vat_wm_ref_region(input_segmentation_path=input_segmentation_path,
+                                 out_segmentation_path=None)
+    seg_img = ants.image_read(input_segmentation_path)
+    seg_img[wm_erode==1] = int(eroded_wm_region_mapping)
+    if out_segmentation_path is not None:
+        ants.image_write(image=seg_img, filename=out_segmentation_path)
+
+    return seg_img
 
 
 def vat_wm_region_merge(wmparc_segmentation_path: str,
@@ -500,7 +548,8 @@ def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsIm
                                                    morph_dil_radius: int = 0,
                                                    z_crop: int = 3) -> ants.core.ANTsImage:
     """
-    Generates a binary vesselness mask from a given vesselness image using quantile-based thresholding.
+    Generates a binary vesselness mask from a given vesselness image using quantile-based
+    thresholding.
 
     This function creates a binary mask by thresholding a vesselness image at a specified
     quantile of non-zero voxel values. Additionally, it allows for optional z-axis cropping

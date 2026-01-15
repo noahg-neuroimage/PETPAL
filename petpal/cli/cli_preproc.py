@@ -134,6 +134,8 @@ Examples:
     petpal-preproc suv -i /path/to/input_img.nii.gz -o petpal_suv.nii.gz --weight 75 --dose 250 --start-time 1200 --end-time 3600
   - Crop segmentation image to PET FOV:
     petpal-preproc seg-crop -i /path/to/input_img.nii.gz -o petpal_cropped_seg.nii.gz --segmentation /path/to/segmentation.nii.gz
+  - Add eroded white matter region to segmentation image:
+    petpal-preproc eroded-wm -i /path/to/input_segmentation.nii.gz -o petpal_seg_with_eroded_wm.nii.gz
 """
 
 
@@ -374,6 +376,10 @@ def _generate_args() -> argparse.ArgumentParser:
                                  help='Path to segmentation image',
                                  type=str)
 
+    parser_eroded_wm = subparsers.add_parser('eroded-wm',
+                                             help='Add eroded white matter region to segmentation image')
+    _add_common_args(parser_eroded_wm)
+
     return parser
 
 
@@ -477,6 +483,9 @@ def main():
             seg_cropped = segmentation_tools.seg_crop_to_pet_fov(pet_img=input_img,
                                                                  segmentation_img=seg_img)
             ants.image_write(seg_cropped,args.out_img)
+        case 'eroded_wm':
+            segmentation_tools.eroded_wm_segmentation(input_segmentation_path=args.input_img,
+                                                      out_segmentation_path=args.out_img)
 
 if __name__ == "__main__":
     main()
