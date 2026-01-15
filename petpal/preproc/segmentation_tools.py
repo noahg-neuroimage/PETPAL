@@ -308,15 +308,14 @@ def eroded_wm_segmentation(input_segmentation_path: str,
         :meth:`~petpal.preproc.segmentation_tools.vat_wm_ref_region` - function that generates the
             eroded white matter region.
     """
-    wm_erode = vat_wm_ref_region(input_segmentation_path=input_segmentation_path)
+    wm_erode = vat_wm_ref_region(input_segmentation_path=input_segmentation_path,
+                                 out_segmentation_path=None)
     seg_img = ants.image_read(input_segmentation_path)
-    wm_merged_seg = segmentations_merge(segmentation_primary=seg_img,
-                                        segmentation_secondary=wm_erode,
-                                        regions=[1])
+    seg_img[wm_erode==1] = 1
     if out_segmentation_path is not None:
-        ants.image_write(image=wm_merged_seg, filename=out_segmentation_path)
-    
-    return wm_merged_seg
+        ants.image_write(image=seg_img, filename=out_segmentation_path)
+
+    return seg_img
 
 
 def vat_wm_region_merge(wmparc_segmentation_path: str,
