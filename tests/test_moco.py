@@ -51,7 +51,7 @@ def test_motion():
     sim_json_path = coerce_outpath_extension(path=sim_img_path,ext='.json')
 
     ants.image_write(sim_img,sim_img_path)
-    safe_copy_meta(static_img_path,sim_json_path)
+    safe_copy_meta(static_img_path,sim_img_path)
 
     moco_img_path = tempfile.mkstemp(suffix='.nii.gz',prefix='MocoResult_')[1]
     moco_json_path = coerce_outpath_extension(path=moco_img_path,ext='.json')
