@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 import ants
-#from ants.contrib.affine3d import Rotate3D, Translate3D
 from petpal.utils.image_io import safe_copy_meta
 from petpal.utils.useful_functions import coerce_outpath_extension
 from petpal.utils.timeseries_from_img_list import timeseries_from_img_list
