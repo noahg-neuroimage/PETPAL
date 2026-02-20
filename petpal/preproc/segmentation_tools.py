@@ -14,10 +14,10 @@ import nibabel
 from nibabel import processing
 import pandas as pd
 
-from ..utils.timeseries_from_img_list import gen_nd_image_based_on_image_list
+from ..utils.dimension import (check_physical_space_for_ants_image_pair,
+                               gen_nd_image_based_on_image_list)
 
-from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
-                                      get_average_of_timeseries)
+from ..utils.useful_functions import get_average_of_timeseries
 from ..utils import math_lib
 
 

@@ -26,7 +26,7 @@ Examples:
 
    .. code-block:: bash
 
-       petpal-preproc windowed-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid
+       petpal-preproc motion-correct -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid
 
 
    * Register to anatomical:
@@ -114,7 +114,7 @@ Examples:
   - Auto crop:
     petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05
   - Windowed moco:
-    petpal-preproc windowed-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid
+    petpal-preproc motion-correct -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid
   - Register to anatomical:
     petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz
   - Write regional tacs:
@@ -217,18 +217,6 @@ def _generate_args() -> argparse.ArgumentParser:
     _add_common_args(parser_crop)
     parser_crop.add_argument('-t','--thresh-val', required=True,default=0.01,
                             help='Fractional threshold to crop image projections.',type=float)
-
-
-    parser_moco = subparsers.add_parser('motion-correction',
-                                        help='Motion correct 4D PET data.')
-    _add_common_args(parser_moco)
-    parser_moco.add_argument('--motion-target', default=None, nargs='+',
-                            help="Motion target option. Can be an image path, "
-                                 "'weighted_series_sum' or a tuple "
-                                 "(i.e. '--motion-target 0 600' for first ten minutes).",
-                            required=True)
-    parser_moco.add_argument('--transform-type', required=False,default='Rigid',
-                             help='Transformation type (Rigid or Affine).',type=str)
 
     parser_tac = subparsers.add_parser('write-tacs',
                                        help='Write ROI TACs from 4D PET using segmentation masks.')

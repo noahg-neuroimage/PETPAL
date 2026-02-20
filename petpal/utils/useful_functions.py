@@ -282,37 +282,6 @@ def read_plasma_glucose_concentration(file_path: str, correction_scale: float = 
     return correction_scale * float(np.loadtxt(file_path))
 
 
-def check_physical_space_for_ants_image_pair(image_1: ants.core.ANTsImage,
-                                             image_2: ants.core.ANTsImage,
-                                             tolerance: float=1e-2) -> bool:
-    """
-    Determines whether two ANTs images share the same physical space. This function works
-    when comparing 4D-images with 3D-images, as opposed to
-    :func:`ants.image_physical_space_consistency`.
-
-    This function validates whether the direction matrices, spacing values, and origins
-    of the two provided ANTs images are consistent, ensuring they reside in the same
-    physical space.
-
-    Args:
-        image_1 (ants.core.ANTsImage): The first ANTs image for comparison.
-        image_2 (ants.core.ANTsImage): The second ANTs image for comparison.
-        tolerance (float): Absolute tolerance for differences between components of the affine
-            transform matrix for the two images. Default 0.01.
-
-    Returns:
-        bool: `True` if both images share the same physical space, `False` otherwise.
-
-    """
-
-
-    dir_cons = np.allclose(image_1.direction[:3,:3], image_2.direction[:3,:3],atol=tolerance)
-    spc_cons = np.allclose(image_1.spacing[:3], image_2.spacing[:3],atol=tolerance)
-    org_cons = np.allclose(image_1.origin[:3], image_2.origin[:3],atol=tolerance)
-
-    return dir_cons and spc_cons and org_cons
-
-
 def convert_ctab_to_dseg(ctab_path: str,
                          dseg_path: str,
                          column_names: list[str]=None):
@@ -377,62 +346,6 @@ def str_to_camel_case(input_str) -> str:
         capped_split_str += [capped_str]
     camel_case_str = ''.join(capped_split_str)
     return camel_case_str
-
-
-def gen_3d_img_from_timeseries(input_img: ants.ANTsImage) -> ants.ANTsImage:
-    """
-    Get the first frame of a 4D image as a template 3D image with voxel value zero.
-
-    A simplified version of :py:func:`ants.ndimage_to_list.ndimage_to_list`.
-
-    Args:
-        input_img (ants.ANTsImage): The 4D image from which to get the template image.
-
-    Returns:
-        img_3d (ants.ANTsImage): The 3D template of the input image as an ants image.
-    """
-    dimension = input_img.dimension
-    subdimension = dimension - 1
-    suborigin = ants.get_origin( input_img )[0:subdimension]
-    subspacing = ants.get_spacing( input_img )[0:subdimension]
-    subdirection = np.eye( subdimension )
-    for i in range( subdimension ):
-        subdirection[i,:] = ants.get_direction( input_img )[i,0:subdimension]
-    img_shape = input_img.shape[:-1]
-    img_3d = ants.make_image(img_shape)
-    ants.set_spacing( img_3d, subspacing )
-    ants.set_origin( img_3d, suborigin )
-    ants.set_direction( img_3d, subdirection )
-
-    return img_3d
-
-
-def get_frame_from_timeseries(input_img: ants.ANTsImage, frame: int) -> ants.ANTsImage:
-    """
-    Get a single frame of a 4D image as a 3D image.
-
-    A simplified version of :py:func:`ants.ndimage_to_list.ndimage_to_list`.
-
-    Args:
-        input_img (ants.ANTsImage): The 4D image from which to get the frame.
-        frame (int): The index of the frame to extract from the time series image.
-
-    Returns:
-        img_3d (ants.ANTsImage): The 3D first frame of the input image as an ants image.
-    """
-    dimension = input_img.dimension
-    subdimension = dimension - 1
-    suborigin = ants.get_origin( input_img )[0:subdimension]
-    subspacing = ants.get_spacing( input_img )[0:subdimension]
-    subdirection = np.eye( subdimension )
-    for i in range( subdimension ):
-        subdirection[i,:] = ants.get_direction( input_img )[i,0:subdimension]
-    img_3d = ants.slice_image( input_img, axis = subdimension, idx = frame )
-    ants.set_spacing( img_3d, subspacing )
-    ants.set_origin( img_3d, suborigin )
-    ants.set_direction( img_3d, subdirection )
-
-    return img_3d
 
 
 def nearest_frame_to_timepoint(frame_times: np.ndarray) -> Callable[[float],float]:
