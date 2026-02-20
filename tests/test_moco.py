@@ -7,7 +7,7 @@ import pandas as pd
 import ants
 from petpal.utils.image_io import safe_copy_meta
 from petpal.utils.useful_functions import coerce_outpath_extension
-from petpal.utils.timeseries_from_img_list import timeseries_from_img_list
+from petpal.utils.dimension import timeseries_from_img_list
 from petpal.preproc.motion_corr import MotionCorrect
 
 
