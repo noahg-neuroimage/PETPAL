@@ -24,7 +24,7 @@ from .reference_tissue_models import fit_mrtm2_2003_to_tac,calc_bp_from_mrtm2_20
 from .fit_tac_with_rtms import get_rtm_kwargs,get_rtm_method,get_rtm_output_size
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.dimension import (check_physical_space_for_ants_image_pair)
-from .graphical_analysis import get_graphical_analysis_method, get_index_from_threshold
+from .graphical_analysis import get_graphical_analysis_method_with_rsquared, get_index_from_threshold
 from ..input_function.blood_input import read_plasma_glucose_concentration
 from ..utils.image_io import safe_copy_meta
 from ..utils.time_activity_curve import safe_load_tac
@@ -73,6 +73,7 @@ def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
 
     slope_img = np.zeros((img_dims[0], img_dims[1], img_dims[2]), float)
     intercept_img = np.zeros_like(slope_img)
+    rsquare_img = np.zeros_like(slope_img)
 
     for i in range(0, img_dims[0], 1):
         for j in range(0, img_dims[1], 1):
@@ -83,8 +84,9 @@ def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
                                               t_thresh_in_minutes=t_thresh_in_mins)
                 slope_img[i, j, k] = analysis_vals[0]
                 intercept_img[i, j, k] = analysis_vals[1]
+                rsquare_img[i, j, k] = analysis_vals[2]
 
-    return slope_img, intercept_img
+    return slope_img, intercept_img, rsquare_img
 
 
 
@@ -139,6 +141,7 @@ def parametric_refregion_analysis(pTAC_times: np.ndarray,
 
     slope_img = np.zeros((img_dims[0], img_dims[1], img_dims[2]), float)
     intercept_img = np.zeros_like(slope_img)
+    rsquare_img = np.zeros_like(slope_img)
 
     for i in range(0, img_dims[0], 1):
         for j in range(0, img_dims[1], 1):
@@ -150,8 +153,9 @@ def parametric_refregion_analysis(pTAC_times: np.ndarray,
                                               k2_prime=k2_prime)
                 slope_img[i, j, k] = analysis_vals[0]
                 intercept_img[i, j, k] = analysis_vals[1]
+                rsquare_img[i, j, k] = analysis_vals[2]
 
-    return slope_img, intercept_img
+    return slope_img, intercept_img, rsquare_img
 
 
 def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
@@ -196,22 +200,22 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
     if len(run_kwargs)>0:
         warnings.warn(f"Got the following run kwargs: {run_kwargs}. Kwargs other than 'k2_prime'"
                       "will be ignored.")
-    analysis_func = get_graphical_analysis_method(method_name=method_name)
+    analysis_func = get_graphical_analysis_method_with_rsquared(method_name=method_name)
     if method_name!='logan_ref':
-        slope_img, intercept_img = apply_linearized_analysis_to_all_voxels(pTAC_times=pTAC_times,
+        slope_img, intercept_img, rsquare_img = apply_linearized_analysis_to_all_voxels(pTAC_times=pTAC_times,
                                                                            pTAC_vals=pTAC_vals,
                                                                            tTAC_img=tTAC_img,
                                                                            t_thresh_in_mins=t_thresh_in_mins,
                                                                            analysis_func=analysis_func)
     else:
-        slope_img, intercept_img = parametric_refregion_analysis(pTAC_times=pTAC_times,
+        slope_img, intercept_img, rsquare_img = parametric_refregion_analysis(pTAC_times=pTAC_times,
                                                                  pTAC_vals=pTAC_vals,
                                                                  tTAC_img=tTAC_img,
                                                                  t_thresh_in_mins=t_thresh_in_mins,
                                                                  analysis_func=analysis_func,
                                                                  k2_prime=run_kwargs['k2_prime'])
 
-    return slope_img, intercept_img
+    return slope_img, intercept_img, rsquare_img
 
 
 def apply_mrtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
@@ -905,11 +909,12 @@ class GraphicalAnalysisParametricImage:
 
         """
         p_tac_times, p_tac_vals = safe_load_tac(self.input_tac_path)
-        self.slope_image, self.intercept_image = generate_parametric_images_with_graphical_method(
+        self.slope_image, self.intercept_image, self.rsquare_img = generate_parametric_images_with_graphical_method(
             pTAC_times=p_tac_times,
             pTAC_vals=p_tac_vals,
             tTAC_img=self.pet_img.numpy(),
-            t_thresh_in_mins=t_thresh_in_mins, method_name=method_name,
+            t_thresh_in_mins=t_thresh_in_mins,
+            method_name=method_name,
             **run_kwargs)
 
     def __call__(self, method_name, t_thresh_in_mins, **run_kwargs):
@@ -949,6 +954,9 @@ class GraphicalAnalysisParametricImage:
 
             tmp_intercept_img = ants.from_numpy_like(self.intercept_image, image=template_img)
             ants.image_write(tmp_intercept_img,f"{file_name_prefix}_intercept.nii.gz")
+
+            tmp_rsquare_img = ants.from_numpy_like(self.rsquare_img, image=template_img)
+            ants.image_write(tmp_rsquare_img,f"{file_name_prefix}_rsquare.nii.gz")
 
             safe_copy_meta(input_image_path=self.input_image_path,
                            out_image_path=f"{file_name_prefix}_slope.nii.gz")
