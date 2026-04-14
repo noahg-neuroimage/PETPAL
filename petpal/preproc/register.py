@@ -384,6 +384,7 @@ class RegisterPet(RegisterBase):
                  image_loader: Optional[ImageLoader] = None):
         super().__init__(image_loader)
         self.reference_img = None
+        self.registered_pet_img = None
 
     def set_reference_img(self, reference_image_path: str):
         self.reference_img = self.image_loader.load(reference_image_path)
@@ -403,7 +404,7 @@ class RegisterPet(RegisterBase):
                                                transformlist=xfm_path,
                                                imagetype=3,
                                                interpolator=self.reg_kwargs['interpolator'])
-        return pet_registered
+        self.registered_pet_img = pet_registered
 
     def __call__(self,
                  input_image_path: str,
@@ -435,7 +436,7 @@ class RegisterPet(RegisterBase):
         self.set_reg_kwargs(**reg_kwargs)
 
         xfm_path = self.register_target(transform_type=transform_type)
-        pet_registered = self.apply_transform(xfm_path=xfm_path)
+        self.apply_transform(xfm_path=xfm_path)
         if out_xfm_folder is not None:
             os.makedirs(out_xfm_folder, exist_ok=True)
             if isinstance(xfm_path, list):
@@ -444,7 +445,7 @@ class RegisterPet(RegisterBase):
             else:
                 copy(xfm, out_xfm_folder)
         
-        ants.image_write(pet_registered, out_image_path)
+        ants.image_write(self.registered_pet_img, out_image_path)
         safe_copy_meta(input_image_path=input_image_path, out_image_path=out_image_path)
 
 def main():
