@@ -37,7 +37,7 @@ class TableLoader:
         '.json': load_json
     }
 
-    def load_data(self, input_data_path: str) -> pd.DataFrame:
+    def load(self, input_data_path: str) -> pd.DataFrame:
         data_path_ext = bids_data_type(input_data_path=input_data_path)
         data_loader = self.data_loading_factory[data_path_ext]
         return data_loader(input_data_path)
@@ -63,7 +63,7 @@ class Population:
         pat_data['VYr'] = pat['VYr']
 
         table_loader = TableLoader()
-        table = table_loader.load_data(str(processed_data_path))
+        table = table_loader.load(str(processed_data_path))
         #table = pd.read_csv(processed_data_path,sep=r'\s+',engine='python')
         pat_data[self.table_key] = self.transpose_table(table)
         for div in divisions:
