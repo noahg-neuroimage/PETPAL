@@ -64,7 +64,6 @@ class Population:
 
         table_loader = TableLoader()
         table = table_loader.load(str(processed_data_path))
-        #table = pd.read_csv(processed_data_path,sep=r'\s+',engine='python')
         pat_data[self.table_key] = self.transpose_table(table)
         for div in divisions:
             pat_data[div] = pat[div]
