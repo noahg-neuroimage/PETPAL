@@ -245,7 +245,8 @@ class Sgtm:
         """
         if self.input_img.shape != self.segmentation_img.shape:
             raise AssertionError("PET and ROI images must be the same dimensions")
-        input_numpy = self.input_img.numpy()
+        segmentation_fov = self.segmentation_img.threshold_image(low_thresh=0.1, binary=True).numpy()
+        input_numpy = self.input_img.numpy() * segmentation_fov
         segmentation_arr = self.segmentation_img.numpy()
 
         unique_labels = self.unique_labels[0]
@@ -276,6 +277,7 @@ class Sgtm:
             raise AssertionError("PET and ROI images must be the same dimensions")
         pet_frame_list = self.input_img.ndimage_to_list()
         segmentation_arr = self.segmentation_img.numpy()
+        segmentation_fov = self.segmentation_img.threshold_image(low_thresh=0.1, binary=True).numpy()
 
         unique_labels = self.unique_labels[0]
 
@@ -286,7 +288,7 @@ class Sgtm:
 
         frame_results = []
         for frame in pet_frame_list:
-            input_numpy = frame.numpy()
+            input_numpy = frame.numpy() * segmentation_fov
             t_corrected, _cond_num = Sgtm.solve_sgtm(omega=omega,
                                                      voxel_by_roi_matrix=voxel_by_roi_matrix,
                                                      input_numpy=input_numpy)
