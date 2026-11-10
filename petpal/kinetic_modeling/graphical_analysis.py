@@ -133,7 +133,7 @@ def linear_least_squares_fit_with_stats(xdata: np.ndarray,
 
     se_intercept = s*np.sqrt(1/n+np.mean(xdata)**2/sum_square_xdiff)
     se_slope = s*sum_square_xdiff**(-0.5)
-    return fit_ans[0][0], fit_ans[0][1], r_squared, se_intercept, se_slope
+    return fit_ans[0][0], fit_ans[0][1], r_squared, se_slope, se_intercept
 
 @numba.njit()
 def cumulative_trapezoidal_integral(xdata: np.ndarray,
@@ -192,23 +192,16 @@ def calculate_patlak_x(tac_times: np.ndarray, tac_vals: np.ndarray) -> np.ndarra
 
 @numba.njit()
 def get_index_from_threshold(times_in_minutes: np.ndarray, t_thresh_in_minutes: float) -> int:
-    """Get the index after which all times are greater than the threshold.
+    """Get the index for the frame time closest to the threshold time, also known as t*.
 
     Args:
         times_in_minutes (np.ndarray): Array containing times in minutes.
         t_thresh_in_minutes (float): Threshold time in minutes.
 
     Returns:
-        int: Index for first time greater than or equal to the threshold time.
-        
-    Notes:
-        If the threshold value is larger than the array, we return -1.
-        
+        int: Index for the frame closest to t_star.
     """
-    if t_thresh_in_minutes > np.max(times_in_minutes):
-        return -1
-    else:
-        return np.argwhere(times_in_minutes >= t_thresh_in_minutes)[0, 0]
+    return np.argmin(np.abs(times_in_minutes - t_thresh_in_minutes))
 
 
 @numba.njit()
