@@ -82,7 +82,7 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
             
     """
     input_arr = input_image.numpy()
-    validate_array_dimension(input_arr=input_arr)
+    validate_array_dimension(input_arr=input_arr, dimension=4)
     if not check_physical_space_for_ants_image_pair(input_image, mask_image):
         raise ValueError("Input and mask images must have the same physical dimensions.")
 
@@ -136,7 +136,7 @@ def apply_mask_4d(input_arr: np.ndarray,
             np.savetxt("time_series.tsv", time_series, delimiter='\t')
 
     """
-    validate_array_dimension(input_arr=input_arr)
+    validate_array_dimension(input_arr=input_arr, dimension=4)
     if input_arr.shape[:3] != mask_arr.shape:
         raise ValueError("Array must have the same physical dimensions.")
 
