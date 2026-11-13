@@ -641,6 +641,9 @@ def seg_crop_to_pet_fov(pet_img: ants.ANTsImage,
 
     Returns:
         segmentation_masked_img (ants.ANTsImage): Segmentation image masked to PET FOV.
+
+    Raises:
+        ValueError: If pet and segmentation images not in same physical space.
     """
     if not check_physical_space_for_ants_image_pair(pet_img, segmentation_img):
         raise ValueError("PET and segmentation image must share physical space.")
