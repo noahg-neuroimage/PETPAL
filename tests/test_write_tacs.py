@@ -6,6 +6,7 @@ import pytest
 import pathlib
 
 import petpal.preproc.regional_tac_extraction as rtx
+from petpal.preproc.regional_tac_extraction import apply_mask_4d
 
 class FakeLabelMapLoader:
     def __init__(self, label_map_option):
@@ -66,3 +67,16 @@ def test_write_tacs_multitac_writes_combined_file_and_skips_nan_regions(tmp_path
     assert "frame_start(min)" in txt
     assert "R1" in txt
     assert "R2" not in txt
+
+def create_mask_and_image_array_data():
+    data_shape = (3,3,3,3)
+    mask_array_data = np.zeros(data_shape[:3])
+    mask_array_data[0,:,0] = 1
+
+    image_array_data = np.random.rand(data_shape)
+    return mask_array_data, image_array_data
+
+def test_apply_mask_4d_only_takes_4d_input():
+    input_data_not_4d = np.zeros((1))
+    with pytest.raises(ValueError):
+        apply_mask_4d(input_arr=input_data_not_4d, mask_arr=input_data_not_4d)
