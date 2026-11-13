@@ -74,8 +74,9 @@ class RegionalStats:
                  label_map_option: str | dict):
         self.pet_img = ants.image_read(input_image_path)
         self.seg_img = ants.image_read(segmentation_image_path)
-        assert check_physical_space_for_ants_image_pair(self.pet_img, self.seg_img), (
-            "input image and anatomical image must occupy the same physical space")
+        if not check_physical_space_for_ants_image_pair(self.pet_img,
+                                                        self.seg_img):
+            raise ValueError("PET and segmentation image must share physical space.")
         self.label_map = LabelMapLoader(label_map_option=label_map_option).label_map
 
     def get_voxels(self, label: str) -> np.ndarray:
