@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 
 from ..preproc.regional_tac_extraction import extract_roi_voxel_tacs_from_image_using_mask
-from .dimension import check_physical_space_for_ants_image_pair
+from .dimension import check_physical_space_for_ants_image_pair, validate_array_dimension
 from .scan_timing import ScanTimingInfo
 
 
@@ -78,9 +78,9 @@ def temporal_pca_analysis_of_image_over_mask(input_image: ants.core.ANTsImage,
           in the input image, used in TAC calculations here.
         - :class:`sklearn.decomposition.PCA`: Underlying PCA implementation used in this function.
     """
-    assert len(input_image.shape) == 4, "Input image must be 4D."
-    assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
-        "Images must have the same physical dimensions.")
+    validate_array_dimension(input_arr=input_image)
+    if not check_physical_space_for_ants_image_pair(input_image, mask_image):
+        raise ValueError("Input and mask images must have the same physical dimensions.")
     mask_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image,
                                                                mask_image=mask_image)
     pca_obj = PCA(n_components=num_components, svd_solver=svd_solver, whiten=whiten, **sklearn_pca_kwargs)
