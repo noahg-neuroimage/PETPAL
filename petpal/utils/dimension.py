@@ -165,3 +165,20 @@ def check_physical_space_for_ants_image_pair(image_1: ants.core.ANTsImage,
     org_cons = np.allclose(image_1.origin[:3], image_2.origin[:3],atol=tolerance)
 
     return dir_cons and spc_cons and org_cons
+
+
+def validate_array_dimension(input_arr: np.ndarray, dimension: int):
+    """Validates that an input array shape matches the expected dimension. If not, returns
+    ValueError.
+    
+    Args:
+        input_arr (np.ndarray): Array to test dimension of.
+        dimension (int): Expected dimension of the input array, such as 3 for 3D.
+    
+    Raises:
+        ValueError: If dimension of the input array does not match the expected dimension.
+    """
+    input_arr_dim = len(input_arr.shape)
+    if input_arr_dim != dimension:
+        raise ValueError(f"Input array has unexpected dimension. Expected {dimension}, got "
+                         f"{input_arr_dim}")
