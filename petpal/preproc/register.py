@@ -144,13 +144,16 @@ def warp_pet_to_atlas(input_image_path: str,
     
     Returns:
         ants.ANTsImage: Input image warped to atlas space.
+
+    Raises:
+        ValueError: if input image and anatomical image not in same physical space.
     """
     input_img = ants.image_read(input_image_path)
     anat_img = ants.image_read(anat_image_path)
     atlas_img = ants.image_read(atlas_image_path)
 
-    assert check_physical_space_for_ants_image_pair(input_img, anat_img), (
-        "input image and anatomical image must occupy the same physical space")
+    if not check_physical_space_for_ants_image_pair(input_img, anat_img):
+        raise ValueError("Input image and anatomical image must occupy the same physical space")
 
     anat_atlas_xfm = ants.registration(fixed=atlas_img,
                                        moving=anat_img,
