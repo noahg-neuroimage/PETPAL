@@ -84,7 +84,7 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
     input_arr = input_image.numpy()
     validate_array_dimension(input_arr=input_arr)
     if not check_physical_space_for_ants_image_pair(input_image, mask_image):
-        raise ValueError("Images must have the same physical dimensions.")
+        raise ValueError("Input and mask images must have the same physical dimensions.")
 
     out_voxels = apply_mask_4d(input_arr=input_arr,
                                mask_arr=mask_image.numpy(),

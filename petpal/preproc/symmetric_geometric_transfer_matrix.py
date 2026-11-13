@@ -270,10 +270,13 @@ class Sgtm:
         Returns:
             frame_results (np.ndarray): Average activity in each region calculated with sGTM
                 for each frame.
+
+        Raises:
+            ValueError: If PET and segmentation images not in the same physical space.
         """
         if not check_physical_space_for_ants_image_pair(self.input_img,
                                                         self.segmentation_img):
-            raise AssertionError("PET and ROI images must be the same dimensions")
+            raise ValueError("PET and segmentation image must share physical space.")
         pet_frame_list = self.input_img.ndimage_to_list()
         segmentation_arr = self.segmentation_img.numpy()
 
